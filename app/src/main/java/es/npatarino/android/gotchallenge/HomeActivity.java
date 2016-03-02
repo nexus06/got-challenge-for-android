@@ -1,6 +1,8 @@
 package es.npatarino.android.gotchallenge;
 
 import android.app.Activity;
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,11 +16,10 @@ import android.support.v4.widget.ContentLoadingProgressBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -41,6 +42,8 @@ public class HomeActivity extends AppCompatActivity {
     ViewPager vp;
     Toolbar toolbar;
     TabLayout tabLayout;
+    private GoTListFragment goTListFragment;
+    private GoTHousesListFragment goTHousesListFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +52,8 @@ public class HomeActivity extends AppCompatActivity {
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(true);
+
         setSpa(new SectionsPagerAdapter(getSupportFragmentManager()));
 
         setVp((ViewPager) findViewById(R.id.container));
@@ -57,6 +62,35 @@ public class HomeActivity extends AppCompatActivity {
         tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(getVp());
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+        MenuItem menuItem = menu.findItem(R.id.action_search);
+        //menuItem.setVisible(false);
+       SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView search = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        search.setSearchableInfo(manager.getSearchableInfo(getComponentName()));
+        // search.setIconifiedByDefault(false); // Do not iconify the widget; expand it by default
+        search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+
+            @Override
+            public boolean onQueryTextSubmit(String s) {
+                goTListFragment.filterCharacter(s);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String s) {
+                goTListFragment.filterCharacter(s);
+                return true;
+            }
+
+        });
+        return true;
+    }
+
 
     public SectionsPagerAdapter getSpa() {
         return spa;
@@ -74,12 +108,59 @@ public class HomeActivity extends AppCompatActivity {
         this.vp = vp;
     }
 
+
+
     public static class GoTListFragment extends Fragment {
 
         private static final String TAG = "GoTListFragment";
 
+        private GoTAdapter adp = null;
+
+        List<GoTCharacter> characters = null;
+
         public GoTListFragment() {
         }
+
+         @Override
+         public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+             super.onCreateOptionsMenu(menu, inflater);
+             MenuItem menuItem =((HomeActivity)getActivity()).toolbar.getMenu().findItem(R.id.action_search);
+             menuItem.setVisible(true);
+             SearchManager manager = (SearchManager) (getActivity().getSystemService(Context.SEARCH_SERVICE));
+             SearchView search = (SearchView) menu.findItem(R.id.action_search).getActionView();
+             search.setSearchableInfo(manager.getSearchableInfo(getActivity().getComponentName()));
+             // search.setIconifiedByDefault(false); // Do not iconify the widget; expand it by default
+             search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+
+                 @Override
+                 public boolean onQueryTextSubmit(String s) {
+                     if(adp!=null && s!=null){
+                         adp.filterCharacter(s);
+                         adp.notifyDataSetChanged();
+                     }else if(adp!=null && s.isEmpty()) {
+                         adp.replaceGoTCharacter(characters);
+                          adp.notifyDataSetChanged();
+                     }
+
+                     return true;
+                 }
+
+                 @Override
+                 public boolean onQueryTextChange(String s) {
+                     return true;
+                 }
+
+             });
+         }
+
+
+
+
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+            return super.onOptionsItemSelected(item);
+        }
+
 
         @Override
         public View onCreateView(final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
@@ -87,7 +168,7 @@ public class HomeActivity extends AppCompatActivity {
             final ContentLoadingProgressBar pb = (ContentLoadingProgressBar) rootView.findViewById(R.id.pb);
             RecyclerView rv = (RecyclerView) rootView.findViewById(R.id.rv);
 
-            final GoTAdapter adp = new GoTAdapter(getActivity());
+            adp = new GoTAdapter(getActivity());
             rv.setLayoutManager(new LinearLayoutManager(getActivity()));
             rv.setHasFixedSize(true);
             rv.setAdapter(adp);
@@ -113,7 +194,7 @@ public class HomeActivity extends AppCompatActivity {
 
                         Type listType = new TypeToken<ArrayList<GoTCharacter>>() {
                         }.getType();
-                        final List<GoTCharacter> characters = new Gson().fromJson(response.toString(), listType);
+                        characters = new Gson().fromJson(response.toString(), listType);
                         GoTListFragment.this.getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -131,6 +212,17 @@ public class HomeActivity extends AppCompatActivity {
             }).start();
             return rootView;
         }
+
+        public void filterCharacter(String s) {
+            if(adp!=null && s!=null){
+                adp.filterCharacter(s);
+                adp.notifyDataSetChanged();
+            }else if(adp!=null && s.isEmpty()) {
+                adp.replaceGoTCharacter(characters);
+                adp.notifyDataSetChanged();
+            }
+
+        }
     }
 
     public static class GoTHousesListFragment extends Fragment {
@@ -138,6 +230,11 @@ public class HomeActivity extends AppCompatActivity {
         private static final String TAG = "GoTHousesListFragment";
 
         public GoTHousesListFragment() {
+        }
+
+        @Override
+        public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+            menu.findItem(R.id.action_search).setVisible(false);
         }
 
         @Override
@@ -238,11 +335,28 @@ public class HomeActivity extends AppCompatActivity {
             }
             return null;
         }
+
+        //http://stackoverflow.com/questions/14035090/how-to-get-existing-fragments-when-using-fragmentpageradapter
+        @Override
+        public Object instantiateItem(ViewGroup container, int position) {
+            Fragment createdFragment = (Fragment) super.instantiateItem(container, position);
+            // save the appropriate reference depending on position
+            switch (position) {
+                case 0:
+                    goTListFragment = (GoTListFragment) createdFragment;
+                    break;
+                case 1:
+                    goTHousesListFragment = (GoTHousesListFragment) createdFragment;
+                    break;
+            }
+            return createdFragment;
+        }
     }
 
     static class GoTAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-        private final List<GoTCharacter> gcs;
+        private List<GoTCharacter> gcs;
+
         private Activity a;
 
         public GoTAdapter(Activity activity) {
@@ -280,6 +394,22 @@ public class HomeActivity extends AppCompatActivity {
         @Override
         public int getItemCount() {
             return gcs.size();
+        }
+
+        private void filterCharacter(String strFilter) {
+            final List<GoTCharacter> filteredCharacter = new ArrayList<>();
+            for(GoTCharacter character:gcs){
+                if(character.getN().contains(strFilter)){
+                    filteredCharacter.add(character);
+                }
+            }
+            gcs.clear();
+            gcs.addAll(filteredCharacter);
+        }
+
+        private void replaceGoTCharacter(List<GoTCharacter> filteredCharacter) {
+            gcs.clear();
+            gcs.addAll(filteredCharacter);
         }
 
         class GotCharacterViewHolder extends RecyclerView.ViewHolder {
