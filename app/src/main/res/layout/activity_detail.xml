@@ -63,7 +63,38 @@
                 android:textSize="@dimen/body_text_size"
                 />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                >
+
+                <GridView
+                    android:id="@+id/grid_characters"
+                    android:layout_width="match_parent"
+                    android:layout_height="400dp"
+                    android:layout_margin="10dp"
+                    android:numColumns="1"
+                    android:verticalSpacing="2dp"
+                    android:horizontalSpacing="2dp"
+                    android:scrollingCache="true"
+                    android:smoothScrollbar="true"
+                    android:clipChildren="true"
+                    android:alwaysDrawnWithCache="true"
+                    android:columnWidth="100dp"
+                    android:stretchMode="columnWidth" >
+                </GridView>
+
+            </LinearLayout>
+
         </LinearLayout>
+        <android.support.v4.widget.ContentLoadingProgressBar
+            android:id="@+id/pb"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            />
 
     </RelativeLayout>
 

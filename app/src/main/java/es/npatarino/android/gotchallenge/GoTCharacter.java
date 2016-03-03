@@ -1,5 +1,7 @@
 package es.npatarino.android.gotchallenge;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -67,6 +69,7 @@ public class GoTCharacter {
     public void setD(final String s) {
         this.d = s;
     }
+
 
     /**
      * Created by Nicolás Patarino on 21/02/16.
