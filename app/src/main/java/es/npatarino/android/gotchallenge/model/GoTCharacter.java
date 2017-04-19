@@ -1,7 +1,5 @@
-package es.npatarino.android.gotchallenge;
+package es.npatarino.android.gotchallenge.model;
 
-import android.os.Parcel;
-import android.os.Parcelable;
 import com.google.gson.annotations.SerializedName;
 
 /**

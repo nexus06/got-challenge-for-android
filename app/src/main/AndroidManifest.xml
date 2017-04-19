@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="es.npatarino.android.gotchallenge"
-          xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    package="es.npatarino.android.gotchallenge"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
@@ -13,16 +14,15 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".DetailActivity"
-            android:parentActivityName=".HomeActivity">
-        </activity>
+            android:parentActivityName=".HomeActivity"></activity>
         <activity
             android:name=".HomeActivity"
             android:label="@string/title_activity_home"
             android:theme="@style/AppTheme">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
     </application>

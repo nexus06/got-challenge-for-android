@@ -1,8 +1,6 @@
 package es.npatarino.android.gotchallenge;
 
-import android.app.ProgressDialog;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.widget.ContentLoadingProgressBar;
@@ -10,8 +8,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.*;
+import android.widget.GridView;
+import android.widget.ImageView;
+import android.widget.TextView;
+import es.npatarino.android.gotchallenge.adapter.CharacterAdapter;
+import es.npatarino.android.gotchallenge.model.GoTCharacter;
+import es.npatarino.android.gotchallenge.model.SimpleCharacter;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -23,7 +25,9 @@ import java.util.List;
 public class DetailActivity extends AppCompatActivity {
 
 
-    private static final String TAG = "DetailActivity";
+    private static final String TAG = DetailActivity.class.getSimpleName();
+
+
     private ContentLoadingProgressBar pb = null;
 
     @Override
@@ -35,16 +39,15 @@ public class DetailActivity extends AppCompatActivity {
         final ImageView ivp = (ImageView) findViewById(R.id.iv_photo);
         final TextView tvn = (TextView) findViewById(R.id.tv_name);
         final TextView tvd = (TextView) findViewById(R.id.tv_description);
-        final GridView lvc = (GridView)findViewById(R.id.grid_characters);
+        final GridView lvc = (GridView) findViewById(R.id.grid_characters);
 
         pb = (ContentLoadingProgressBar) findViewById(R.id.pb);
 
 
-        final String d = getIntent().getStringExtra("description");
-        final String n = getIntent().getStringExtra("name");
-        final String i = getIntent().getStringExtra("imageUrl");
-        final String chars = getIntent().getStringExtra("characters");
-        final int mode = getIntent().getIntExtra("mode", HomeActivity.OFF_LINE);
+        final String d = getIntent().getStringExtra(HomeActivity.DESCRIPTION_EXTRA);
+        final String n = getIntent().getStringExtra(HomeActivity.NAME_EXTRA);
+        final String i = getIntent().getStringExtra(HomeActivity.IMAGE_URL_EXTRA);
+        final String chars = getIntent().getStringExtra(HomeActivity.CHARACTRS_EXTRA);
 
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.t);
@@ -61,11 +64,12 @@ public class DetailActivity extends AppCompatActivity {
                 try {
                     url = new URL(i);
                     final Bitmap bmp;
-                    bmp = Utilities.getBitmapFromMemCache(n, url, HomeActivity.mMemoryCache);
+                    bmp = Utils.getBitmapFromMemCache(n, url, HomeActivity.mMemoryCache);
 
 
                     final ArrayList<String> charactersList = new ArrayList<String>();
-                    if(chars!=null && !chars.isEmpty()){                          ;
+                    if (chars != null && !chars.isEmpty()) {
+                        ;
                         Collections.addAll(charactersList, chars.split(","));
                     }
 
@@ -76,22 +80,22 @@ public class DetailActivity extends AppCompatActivity {
                             ivp.setImageBitmap(bmp);
                             tvn.setText(n);
                             tvd.setText(d);
-                            if(!charactersList.isEmpty()){
+                            if (!charactersList.isEmpty()) {
                                 ivp.setVisibility(View.GONE);
 
                                 tvd.setVisibility(View.GONE);
 
                                 List<GoTCharacter> characters = new ArrayList<GoTCharacter>();
-                                for(String chararctStr: charactersList){
+                                for (String chararctStr : charactersList) {
                                     GoTCharacter character = new GoTCharacter();
-                                    String[] l = chararctStr.split(HomeActivity.URL_SEPARATOR);
+                                    String[] l = chararctStr.split(Utils.URL_SEPARATOR);
                                     character.setN(l[0]);
                                     character.setIu(l[1]);
                                     characters.add(character);
                                 }
-                                new GetAsyncImages(lvc, pb, mode).execute(characters);
+                                new GetAsyncImages(lvc, pb).execute(characters);
 
-                            }else {
+                            } else {
                                 lvc.setVisibility(View.GONE);
                                 pb.hide();
                             }
@@ -104,36 +108,32 @@ public class DetailActivity extends AppCompatActivity {
         }).start();
     }
 
-
-    private class GetAsyncImages extends AsyncTask<List<GoTCharacter>, Void, List<SimpleCharacter> > {
+    /*this class preload all character images to load them at same time in adapter*/
+    private class GetAsyncImages extends AsyncTask<List<GoTCharacter>, Void, List<SimpleCharacter>> {
 
         private final GridView grid;
         private final ContentLoadingProgressBar dialog;
-        private int mode = HomeActivity.OFF_LINE;
 
 
-        GetAsyncImages( GridView gridView, ContentLoadingProgressBar dialog, int mode){
+        GetAsyncImages(GridView gridView, ContentLoadingProgressBar dialog) {
             this.grid = gridView;
             this.dialog = dialog;
-            this.mode = mode;
 
         }
 
         @Override
-        protected List<SimpleCharacter>  doInBackground(List<GoTCharacter>... params) {
+        protected List<SimpleCharacter> doInBackground(List<GoTCharacter>... params) {
             URL url = null;
             List<SimpleCharacter> allCharacters = new ArrayList<>();
-            for(GoTCharacter character:params[0]){
+            for (GoTCharacter character : params[0]) {
                 try {
 
                     url = new URL(character.getIu());
                     final Bitmap bmp;
-                        bmp = Utilities.getBitmapFromMemCache(character.getN(), url, HomeActivity.mMemoryCache);
+                    bmp = Utils.getBitmapFromMemCache(character.getN(), url, HomeActivity.mMemoryCache);
 
-                    allCharacters.add(new SimpleCharacter(character.getN(),bmp));
+                    allCharacters.add(new SimpleCharacter(character.getN(), bmp));
                 } catch (MalformedURLException e) {
-                    Log.e(TAG, Log.getStackTraceString(e));
-                } catch (IOException e) {
                     Log.e(TAG, Log.getStackTraceString(e));
                 }
             }
@@ -142,13 +142,13 @@ public class DetailActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(List<SimpleCharacter> result) {
-            grid.setAdapter(new CharacterAdapter(DetailActivity.this,result));
+            grid.setAdapter(new CharacterAdapter(DetailActivity.this, result));
             dialog.hide();
         }
 
         @Override
         protected void onPreExecute() {
-           dialog.show();
+            dialog.show();
 
         }
 
